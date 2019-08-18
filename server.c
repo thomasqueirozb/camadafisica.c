@@ -53,7 +53,6 @@
 
 #include "arduino-serial-lib.h"
 
-//
 void usage(void) {
     printf(
         "Usage: arduino-serial -b <bps> -p <serialport> [OPTIONS]\n"
@@ -86,27 +85,31 @@ void usage(void) {
     exit(EXIT_SUCCESS);
 }
 
-//
 void error(char* msg) {
     fprintf(stderr, "%s\n", msg);
     exit(EXIT_FAILURE);
 }
 
 int main(int argc, char* argv[]) {
-    const int buf_max = 256;
+    if (argc == 1) {
+        usage();
+    }
 
+    /*************************************************\
+    |         DEFAULT CONFIGURATION VARIABLES         |
+    \*************************************************/
+
+    const int buf_max = 256;
+    /* char serialport[buf_max]; */
     int fd = -1;
-    char serialport[buf_max];
-    int baudrate = 9600;  // default
     char quiet = 0;
     char eolchar = '\n';
     int timeout = 5000;
     char buf[buf_max];
     int rc, n;
 
-    if (argc == 1) {
-        usage();
-    }
+    int baudrate = 9600;
+    char serialport[] = "/dev/ttyACM0";
 
     /* parse options */
     int option_index = 0, opt;
@@ -140,6 +143,13 @@ int main(int argc, char* argv[]) {
                 if (!quiet) printf("eolchar set to '%c'\n", eolchar);
                 break;
             case 't':
+                /* OPTARG usage
+                 * ------------
+                 *
+                 * First 10 characters of string converted to int
+                 * timeout = int(optarg[:10])
+                 * NULL = optarg[10:]
+                 */
                 timeout = strtol(optarg, NULL, 10);
                 if (!quiet) printf("timeout set to %d millisecs\n", timeout);
                 break;
@@ -154,6 +164,8 @@ int main(int argc, char* argv[]) {
             case 'b':
                 baudrate = strtol(optarg, NULL, 10);
                 break;
+
+                /*
             case 'p':
                 if (fd != -1) {
                     serialport_close(fd);
@@ -165,9 +177,18 @@ int main(int argc, char* argv[]) {
                 if (!quiet) printf("opened port %s\n", serialport);
                 serialport_flush(fd);
                 break;
+                */
+
+                /*
+            case 'n': // TODO: REVERT THIS
+                n = strtol(optarg, NULL, 10);  // convert string to number
+                printf("n: %d\n", (uint8_t)n);
+                return 0; */
+
             case 'n':
                 if (fd == -1) error("serial port not opened");
                 n = strtol(optarg, NULL, 10);  // convert string to number
+                printf("n: %d\n", (uint8_t)n);
                 rc = serialport_writebyte(fd, (uint8_t)n);
                 if (rc == -1) error("error writing");
                 break;
@@ -191,8 +212,13 @@ int main(int argc, char* argv[]) {
                 break;
             case 'r':
                 if (fd == -1) error("serial port not opened");
-                memset(buf, 0, buf_max);  //
-                serialport_read_until(fd, buf, eolchar, buf_max, timeout);
+                memset(buf, 0, buf_max);  // Copy (buf_max)x 0's into buf
+
+                serialport_read_until(fd,        // device
+                                      buf,       // buffer
+                                      eolchar,   // end of line char
+                                      buf_max,   // maximum buffer length
+                                      timeout);  // timeout
                 if (!quiet) printf("read string:");
                 printf("%s\n", buf);
                 break;
@@ -204,6 +230,61 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    exit(EXIT_SUCCESS);
-}  // end main
+    /*************************************************\
+    |              OPEN AND FLUSH PORT                |
+    \*************************************************/
 
+    fd = serialport_init(serialport, baudrate);
+    if (fd == -1) {
+        error("Couldn't open port");
+        return 5;
+    }
+
+    if (!quiet) printf("Opened port %s\n", serialport);
+    serialport_flush(fd);  // Flush port (needed to clean buffer); Needs to
+                           // sleep for 2 seconds (TODO: look into it)
+    if (!quiet) printf("Port %s flushed\n", serialport);
+
+    /*************************************************\
+    |                 OPEN/READ PHOTO                 |
+    \*************************************************/
+
+    printf("Nome do arquivo: ");
+    fflush(stdout);
+    char filepath[4096];
+    scanf("%s", filepath);
+
+    FILE* fr_ptr;  // File read pointer
+    fr_ptr = fopen(filepath, "rb");
+    if (fr_ptr == NULL) {
+        printf("File could not be opened\n");
+        exit(5);
+    }
+
+    /*************************************************\
+    |          GET PHOTO SIZE AND BYTE SHIFT          |
+    \*************************************************/
+
+    fseek(fr_ptr, 0L, SEEK_END);  // Go to end of file
+    int size = ftell(fr_ptr);  // Get size in bytes (should be int or bigger?)
+    rewind(fr_ptr);            // Go back to start of file
+
+    uint8_t bytes[4];
+
+    bytes[0] = (size >> 24) & 0xFF;
+    bytes[1] = (size >> 16) & 0xFF;
+    bytes[2] = (size >> 8) & 0xFF;
+    bytes[3] = size & 0xFF;
+    if (bytes[3] == 0xFF)
+        printf("256");
+
+    int ch;
+    // Needs to be int unless EOF is the first 0xff not actual EOF
+    // on binary files only. Text files work fine if ch is char
+
+    while ((ch = fgetc(fr_ptr)) != EOF) {  // size: char==1 byte==uint8_t
+        printf("%c", ch);
+        // fprintf(fw_ptr, "%c", ch);
+    }
+    exit(EXIT_SUCCESS);
+}
