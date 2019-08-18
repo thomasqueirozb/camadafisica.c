@@ -107,9 +107,16 @@ int serialport_init(const char* serialport, int baud) {
 
 int serialport_close(int fd) { return close(fd); }
 
-int serialport_writebyte(int fd, uint8_t b) {
+int serialport_write_byte(int fd, uint8_t b) {
     int n = write(fd, &b, 1);
     if (n != 1) return -1;
+    return 0;
+}
+
+int serialport_write_bytes(int fd, const uint8_t* bytes) {
+    ssize_t len = sizeof(bytes);
+    ssize_t n = write(fd, bytes, len);
+    if (n != len) return -1;
     return 0;
 }
 

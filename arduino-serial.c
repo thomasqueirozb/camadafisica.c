@@ -168,7 +168,7 @@ int main(int argc, char* argv[]) {
             case 'n':
                 if (fd == -1) error("serial port not opened");
                 n = strtol(optarg, NULL, 10);  // convert string to number
-                rc = serialport_writebyte(fd, (uint8_t)n);
+                rc = serialport_write_byte(fd, (uint8_t)n);
                 if (rc == -1) error("error writing");
                 break;
             case 'S':

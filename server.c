@@ -189,7 +189,7 @@ int main(int argc, char* argv[]) {
                 if (fd == -1) error("serial port not opened");
                 n = strtol(optarg, NULL, 10);  // convert string to number
                 printf("n: %d\n", (uint8_t)n);
-                rc = serialport_writebyte(fd, (uint8_t)n);
+                rc = serialport_write_byte(fd, (uint8_t)n);
                 if (rc == -1) error("error writing");
                 break;
             case 'S':
@@ -231,7 +231,7 @@ int main(int argc, char* argv[]) {
     }
 
     /*************************************************\
-    |              OPEN AND FLUSH PORT                |
+    |               OPEN AND FLUSH PORT               |
     \*************************************************/
 
     fd = serialport_init(serialport, baudrate);
@@ -275,8 +275,7 @@ int main(int argc, char* argv[]) {
     bytes[1] = (size >> 16) & 0xFF;
     bytes[2] = (size >> 8) & 0xFF;
     bytes[3] = size & 0xFF;
-    if (bytes[3] == 0xFF)
-        printf("256");
+    if (bytes[3] == 0xFF) printf("256");
 
     int ch;
     // Needs to be int unless EOF is the first 0xff not actual EOF
