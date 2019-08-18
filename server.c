@@ -246,44 +246,59 @@ int main(int argc, char* argv[]) {
     if (!quiet) printf("Port %s flushed\n", serialport);
 
     /*************************************************\
-    |                 OPEN/READ PHOTO                 |
+    |           OPEN/READ PHOTO AND GET SIZE          |
     \*************************************************/
 
     printf("Nome do arquivo: ");
     fflush(stdout);
-    char filepath[4096];
-    scanf("%s", filepath);
-
     FILE* fr_ptr;  // File read pointer
-    fr_ptr = fopen(filepath, "rb");
+    {
+        char filepath[4096];
+        scanf("%s", filepath);
+        fr_ptr = fopen(filepath, "rb");
+    }
+
     if (fr_ptr == NULL) {
         printf("File could not be opened\n");
         exit(5);
     }
 
-    /*************************************************\
-    |          GET PHOTO SIZE AND BYTE SHIFT          |
-    \*************************************************/
-
     fseek(fr_ptr, 0L, SEEK_END);  // Go to end of file
     int size = ftell(fr_ptr);  // Get size in bytes (should be int or bigger?)
     rewind(fr_ptr);            // Go back to start of file
 
-    uint8_t bytes[4];
+    /*************************************************\
+    |         HEADER AND PAYLOAD (COUNT EOFs)         |
+    \*************************************************/
 
-    bytes[0] = (size >> 24) & 0xFF;
-    bytes[1] = (size >> 16) & 0xFF;
-    bytes[2] = (size >> 8) & 0xFF;
-    bytes[3] = size & 0xFF;
-    if (bytes[3] == 0xFF) printf("256");
+    uint8_t header[5];
+
+    header[0] = (size >> 24) & 0xFF;
+    header[1] = (size >> 16) & 0xFF;
+    header[2] = (size >> 8) & 0xFF;
+    header[3] = size & 0xFF;
+    if (header[3] == 0xFF) printf("256");
 
     int ch;
     // Needs to be int unless EOF is the first 0xff not actual EOF
     // on binary files only. Text files work fine if ch is char
 
+    uint8_t EOF_bytes[] = {0xab, 0xcd, 0xef};  // Will break if size < 3
+    uint8_t read_bytes[] = {0x00, 0x00, 0x00};
+
+    uint8_t payload[size];
+    uint8_t EOFs = 0;
+
     while ((ch = fgetc(fr_ptr)) != EOF) {  // size: char==1 byte==uint8_t
-        printf("%c", ch);
+        if (EOF_bytes[0] == read_bytes[0] && EOF_bytes[1] == read_bytes[1] &&
+            EOF_bytes[2] == read_bytes[2]) {
+            EOFs++;
+        }
+        read_bytes[0] = read_bytes[1];
+        read_bytes[1] = read_bytes[2];
+        read_bytes[2] = (uint8_t)ch;
         // fprintf(fw_ptr, "%c", ch);
     }
+    header[4] = EOFs;
     exit(EXIT_SUCCESS);
 }
