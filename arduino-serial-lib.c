@@ -155,7 +155,7 @@ int serialport_read_until(int fd, char* buf, char until, int buf_max,
     return 0;
 }
 
-int serialport_read_bytes(int fd, char* buf, int n_bytes, int millis) {
+int serialport_read_bytes(int fd, uint8_t* buf, int n_bytes, int millis) {
     int n;
     do {
         n = read(fd, buf, n_bytes);
@@ -165,6 +165,7 @@ int serialport_read_bytes(int fd, char* buf, int n_bytes, int millis) {
             continue;
         }
     } while (0);
+    return 0;
 #ifdef SERIALPORTDEBUG
     printf("serialport_read_bytes n_bytes=%d, millis=%d read(n)=%d\n", n_bytes,
            millis, n);

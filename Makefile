@@ -7,12 +7,15 @@ endif
 
 
 #################  Common  ##################################################
+ERRORS = -Wall -Werror -Wextra
+CFLAGS += $(INCLUDES) -O $(ERRORS) -std=gnu99
 
-CFLAGS += $(INCLUDES) -O -Wall -Werror -Wextra -std=gnu99
 
-
-all: server
+all: server client
 # all: arduino-serial
+
+client: client.o arduino-serial-lib.o
+	$(CC) $(CFLAGS) -o server server.o arduino-serial-lib.o $(LIBS)
 
 server: server.o arduino-serial-lib.o
 	$(CC) $(CFLAGS) -o server server.o arduino-serial-lib.o $(LIBS)
