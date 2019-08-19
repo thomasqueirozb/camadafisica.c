@@ -115,7 +115,10 @@ int serialport_write_byte(int fd, uint8_t b) {
 
 int serialport_write_bytes(int fd, const uint8_t* bytes) {
     size_t len = sizeof(bytes);
-    ssize_t n = write(fd, bytes, len);  // TODO: shouldn't it return size_t?
+    // TODO: cannot write all bytes in one system call
+    //       need to rewrite this
+    ssize_t n = write(fd, bytes, len);
+    printf("wrote n: %ld bytes\n", n);
     if ((size_t)n != len) return -1;
     return 0;
 }
@@ -157,7 +160,9 @@ int serialport_read_until(int fd, char* buf, char until, int buf_max,
 
 int serialport_read_bytes(int fd, uint8_t* buf, int n_bytes, int millis) {
     int n;
-     while (1) {
+    // TODO: cannot read all bytes in one system call
+    //       need to rewrite this
+    while (1) {
         n = read(fd, buf, n_bytes);
         if (n == -1) return -1;  // couldn't read
         if (n == 0) {
