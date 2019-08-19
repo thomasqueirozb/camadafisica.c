@@ -179,12 +179,6 @@ int main(int argc, char* argv[]) {
                 break;
                 */
 
-                /*
-            case 'n': // TODO: REVERT THIS
-                n = strtol(optarg, NULL, 10);  // convert string to number
-                printf("n: %d\n", (uint8_t)n);
-                return 0; */
-
             case 'n':
                 if (fd == -1) error("serial port not opened");
                 n = strtol(optarg, NULL, 10);  // convert string to number
@@ -263,9 +257,9 @@ int main(int argc, char* argv[]) {
         exit(5);
     }
 
-    fseek(fr_ptr, 0L, SEEK_END);  // Go to end of file
-    int size = ftell(fr_ptr);  // Get size in bytes (should be int or bigger?)
-    rewind(fr_ptr);            // Go back to start of file
+    fseek(fr_ptr, 0L, SEEK_END);          // Go to end of file
+    size_t size_payload = ftell(fr_ptr);  // Get size in bytes
+    rewind(fr_ptr);                       // Go back to start of file
 
     /*************************************************\
     |         HEADER AND PAYLOAD (COUNT EOFs)         |
@@ -273,23 +267,24 @@ int main(int argc, char* argv[]) {
 
     uint8_t header[5];
 
-    header[0] = (size >> 24) & 0xFF;
-    header[1] = (size >> 16) & 0xFF;
-    header[2] = (size >> 8) & 0xFF;
-    header[3] = size & 0xFF;
-    if (header[3] == 0xFF) printf("256");
+    header[0] = (size_payload >> 24) & 0xFF;
+    header[1] = (size_payload >> 16) & 0xFF;
+    header[2] = (size_payload >> 8) & 0xFF;
+    header[3] = size_payload & 0xFF;
 
     int ch;
     // Needs to be int unless EOF is the first 0xff not actual EOF
     // on binary files only. Text files work fine if ch is char
 
-    uint8_t EOF_bytes[] = {0xab, 0xcd, 0xef};  // Will break if size < 3
+    uint8_t EOF_bytes[] = {0xab, 0xcd, 0xef};  // Will break if size<3 TODO:fix
     uint8_t read_bytes[] = {0x00, 0x00, 0x00};
 
-    uint8_t payload[size];
+    uint8_t payload[size_payload];
     uint8_t EOFs = 0;
 
-    while ((ch = fgetc(fr_ptr)) != EOF) {  // size: char==1 byte==uint8_t
+    size_t counter = 0;
+    while ((ch = fgetc(fr_ptr)) != EOF ||
+           counter < size_payload) {  // size: char==1 byte==uint8_t
         if (EOF_bytes[0] == read_bytes[0] && EOF_bytes[1] == read_bytes[1] &&
             EOF_bytes[2] == read_bytes[2]) {
             EOFs++;
@@ -298,7 +293,11 @@ int main(int argc, char* argv[]) {
         read_bytes[1] = read_bytes[2];
         read_bytes[2] = (uint8_t)ch;
         // fprintf(fw_ptr, "%c", ch);
+        payload[counter] = ch;
+        counter++;
     }
     header[4] = EOFs;
+    serialport_write_bytes(fd, header);
+    serialport_write_bytes(fd, payload);
     exit(EXIT_SUCCESS);
 }

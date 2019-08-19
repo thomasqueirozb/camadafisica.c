@@ -114,9 +114,9 @@ int serialport_write_byte(int fd, uint8_t b) {
 }
 
 int serialport_write_bytes(int fd, const uint8_t* bytes) {
-    ssize_t len = sizeof(bytes);
-    ssize_t n = write(fd, bytes, len);
-    if (n != len) return -1;
+    size_t len = sizeof(bytes);
+    ssize_t n = write(fd, bytes, len);  // TODO: shouldn't it return size_t?
+    if ((size_t)n != len) return -1;
     return 0;
 }
 
@@ -152,6 +152,26 @@ int serialport_read_until(int fd, char* buf, char until, int buf_max,
     } while (b[0] != until && i < buf_max && timeout > 0);
 
     buf[i] = 0;  // null terminate the string
+    return 0;
+}
+
+int serialport_read_bytes(int fd, char* buf, int n_bytes, int millis) {
+    int n;
+    do {
+        n = read(fd, buf, n_bytes);
+        if (n == -1) return -1;  // couldn't read
+        if (n == 0) {
+            usleep(millis * 1000);  // wait 1 msec try again
+            continue;
+        }
+    } while (0);
+#ifdef SERIALPORTDEBUG
+    printf("serialport_read_bytes n_bytes=%d, millis=%d read(n)=%d\n", n_bytes,
+           millis, n);
+#endif
+    //     i += n;
+    // } while (i < n_bytes);
+
     return 0;
 }
 
