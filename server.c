@@ -165,19 +165,17 @@ int main(int argc, char* argv[]) {
                 baudrate = strtol(optarg, NULL, 10);
                 break;
 
-                /*
             case 'p':
                 if (fd != -1) {
                     serialport_close(fd);
                     if (!quiet) printf("closed port %s\n", serialport);
                 }
                 strcpy(serialport, optarg);
-                fd = serialport_init(optarg, baudrate);
-                if (fd == -1) error("couldn't open port");
-                if (!quiet) printf("opened port %s\n", serialport);
-                serialport_flush(fd);
+                // fd = serialport_init(optarg, baudrate);
+                // if (fd == -1) error("couldn't open port");
+                // if (!quiet) printf("opened port %s\n", serialport);
+                // serialport_flush(fd);
                 break;
-                */
 
             case 'n':
                 if (fd == -1) error("serial port not opened");
@@ -253,7 +251,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (fr_ptr == NULL) {
-        printf("File could not be opened\n");
+        error("File could not be opened");
         exit(5);
     }
 
@@ -261,6 +259,7 @@ int main(int argc, char* argv[]) {
     size_t size_payload = ftell(fr_ptr);  // Get size in bytes
     rewind(fr_ptr);                       // Go back to start of file
 
+    if (!quiet) printf("size_payload: %lu\n", size_payload);
     /*************************************************\
     |         HEADER AND PAYLOAD (COUNT EOFs)         |
     \*************************************************/
@@ -297,7 +296,9 @@ int main(int argc, char* argv[]) {
         counter++;
     }
     header[4] = EOFs;
+    if (!quiet) printf("Writing header\n");
     serialport_write_bytes(fd, header);
+    if (!quiet) printf("Writing payload\n");
     serialport_write_bytes(fd, payload);
     exit(EXIT_SUCCESS);
 }

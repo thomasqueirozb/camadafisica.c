@@ -31,8 +31,8 @@ arduino-serial-server: arduino-serial-lib.o
 
 
 clean:
-	rm server server.o
-	rm client client.o
+	rm -f server *.o *.a
+	rm -f client *.o *.a
 	rm -f $(OBJ) arduino-serial *.o *.a
 	rm -f $(OBJ) arduino-serial-server *.o *.a
 

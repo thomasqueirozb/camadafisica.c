@@ -157,14 +157,16 @@ int serialport_read_until(int fd, char* buf, char until, int buf_max,
 
 int serialport_read_bytes(int fd, uint8_t* buf, int n_bytes, int millis) {
     int n;
-    do {
+     while (1) {
         n = read(fd, buf, n_bytes);
         if (n == -1) return -1;  // couldn't read
         if (n == 0) {
             usleep(millis * 1000);  // wait 1 msec try again
             continue;
         }
-    } while (0);
+        printf("read n: %d bytes\n", n);
+        break;
+    }
     return 0;
 #ifdef SERIALPORTDEBUG
     printf("serialport_read_bytes n_bytes=%d, millis=%d read(n)=%d\n", n_bytes,

@@ -165,19 +165,18 @@ int main(int argc, char* argv[]) {
                 baudrate = strtol(optarg, NULL, 10);
                 break;
 
-                /*
             case 'p':
                 if (fd != -1) {
                     serialport_close(fd);
                     if (!quiet) printf("closed port %s\n", serialport);
+                    fd = -1;
                 }
                 strcpy(serialport, optarg);
-                fd = serialport_init(optarg, baudrate);
-                if (fd == -1) error("couldn't open port");
-                if (!quiet) printf("opened port %s\n", serialport);
-                serialport_flush(fd);
+                // fd = serialport_init(optarg, baudrate);
+                // if (fd == -1) error("couldn't open port");
+                // if (!quiet) printf("opened port %s\n", serialport);
+                // serialport_flush(fd);
                 break;
-                */
 
             case 'n':
                 if (fd == -1) error("serial port not opened");
@@ -243,20 +242,32 @@ int main(int argc, char* argv[]) {
     |                  RECIEVE HEADER                 |
     \*************************************************/
     uint8_t header[5] = {0};
-    int header_recieved = serialport_read_bytes(fd, header, 5, 1);
-    printf("Header %d", header_recieved);
+    if (!quiet) printf("Reading header\n");
+    int header_recieved = serialport_read_bytes(fd, header, 5, 10);
+    if (!quiet) printf("Header recieve status %d\n", header_recieved);
 
+    /*************************************************\
+    |                 RECIEVE PAYLOAD                 |
+    \*************************************************/
     size_t size_payload =
         header[3] | header[2] << 8 | header[1] << 16 | header[0] << 24;
+    if (!quiet) printf("header[0] = 0x%hhx\n", header[0]);
+    if (!quiet) printf("header[1] = 0x%hhx\n", header[1]);
+    if (!quiet) printf("header[2] = 0x%hhx\n", header[2]);
+    if (!quiet) printf("header[3] = 0x%hhx\n", header[3]);
+    if (!quiet) printf("header[4] = 0x%hhx\n", header[4]);
 
+    if (!quiet) printf("size_payload: %lu\n", size_payload);
     uint8_t payload[size_payload];
     memset(payload, 0, size_payload);
-    int payload_recieved = serialport_read_bytes(fd, payload, size_payload, 1);
-    printf("Payload %d", payload_recieved);
+
+    if (!quiet) printf("Reading payload\n");
+    int payload_recieved = serialport_read_bytes(fd, payload, size_payload, 30);
+    if (!quiet) printf("Payload recieve status %d\n", payload_recieved);
 
     FILE* fw_ptr;  // File write pointer
     fw_ptr = fopen("recieved.bin", "rb+");
-
+    if (!quiet) printf("Writing binary file\n");
     fwrite(payload, 1, size_payload, fw_ptr);
 
     /*
