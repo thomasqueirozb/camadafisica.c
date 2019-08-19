@@ -15,7 +15,7 @@ all: server client
 # all: arduino-serial
 
 client: client.o arduino-serial-lib.o
-	$(CC) $(CFLAGS) -o server server.o arduino-serial-lib.o $(LIBS)
+	$(CC) $(CFLAGS) -o client client.o arduino-serial-lib.o $(LIBS)
 
 server: server.o arduino-serial-lib.o
 	$(CC) $(CFLAGS) -o server server.o arduino-serial-lib.o $(LIBS)
@@ -32,6 +32,7 @@ arduino-serial-server: arduino-serial-lib.o
 
 clean:
 	rm server server.o
+	rm client client.o
 	rm -f $(OBJ) arduino-serial *.o *.a
 	rm -f $(OBJ) arduino-serial-server *.o *.a
 
