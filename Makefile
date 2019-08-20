@@ -11,6 +11,8 @@ ERRORS = -Wall -Werror -Wextra
 CFLAGS += $(INCLUDES) -O $(ERRORS) -std=gnu99
 
 
+debug: clean server client
+
 all: server client
 # all: arduino-serial
 

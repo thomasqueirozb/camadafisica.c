@@ -113,13 +113,23 @@ int serialport_write_byte(int fd, uint8_t b) {
     return 0;
 }
 
-int serialport_write_bytes(int fd, const uint8_t* bytes) {
-    size_t len = sizeof(bytes);
-    // TODO: cannot write all bytes in one system call
-    //       need to rewrite this
-    ssize_t n = write(fd, bytes, len);
-    printf("wrote n: %ld bytes\n", n);
-    if ((size_t)n != len) return -1;
+int serialport_write_bytes(int fd, const uint8_t* bytes, size_t n_bytes) {
+    ssize_t n;
+    size_t bytes_written = 0;
+
+    while (bytes_written < (size_t)n_bytes) {
+        n = write(fd, &bytes[bytes_written],
+                  1);            // write one byte at a time TODO optimize
+        // if (n == -1) return -1;  // couldn't read
+        if (n == -1) continue;  // couldn't read
+        if (n == 0) {
+            // usleep(millis * 1000);  // wait 1 msec try again
+            continue;
+        }
+        printf("wrote total n: %ld bytes\n", bytes_written);
+        bytes_written += n;
+    }
+    printf("Total bytes written: %ld\n", bytes_written);
     return 0;
 }
 
@@ -159,19 +169,22 @@ int serialport_read_until(int fd, char* buf, char until, int buf_max,
 }
 
 int serialport_read_bytes(int fd, uint8_t* buf, int n_bytes, int millis) {
-    int n;
-    // TODO: cannot read all bytes in one system call
-    //       need to rewrite this
-    while (1) {
-        n = read(fd, buf, n_bytes);
-        if (n == -1) return -1;  // couldn't read
+    ssize_t n;
+    size_t bytes_read = 0;
+    uint8_t temp_buf[1];
+
+    while (bytes_read < (size_t)n_bytes) {
+        n = read(fd, temp_buf, 1);  // Read one byte at a time TODO optimize
+        if (n == -1) return -1;     // couldn't read
         if (n == 0) {
             usleep(millis * 1000);  // wait 1 msec try again
             continue;
         }
-        printf("read n: %d bytes\n", n);
-        break;
+        printf("read total: %ld bytes\n", bytes_read);
+        buf[bytes_read] = temp_buf[0];
+        bytes_read += n;
     }
+    printf("Total bytes read: %ld\n", bytes_read);
     return 0;
 #ifdef SERIALPORTDEBUG
     printf("serialport_read_bytes n_bytes=%d, millis=%d read(n)=%d\n", n_bytes,

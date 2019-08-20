@@ -266,9 +266,15 @@ int main(int argc, char* argv[]) {
     if (!quiet) printf("Payload recieve status %d\n", payload_recieved);
 
     FILE* fw_ptr;  // File write pointer
-    fw_ptr = fopen("recieved.bin", "rb+");
+    fw_ptr = fopen("recieved.bin", "wb+");
     if (!quiet) printf("Writing binary file\n");
     fwrite(payload, 1, size_payload, fw_ptr);
+    // for (size_t ch = 0; ch < size_payload; ch++) {
+    //     printf("forzim\n");
+    //     printf("%c\n", payload[ch]);
+    //     // printf("%c", ch);
+    //     fprintf(fw_ptr, "%c", payload[ch]);
+    // }
 
     /*
     int ch;

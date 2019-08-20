@@ -297,8 +297,8 @@ int main(int argc, char* argv[]) {
     }
     header[4] = EOFs;
     if (!quiet) printf("Writing header\n");
-    serialport_write_bytes(fd, header);
+    serialport_write_bytes(fd, header, 5);
     if (!quiet) printf("Writing payload\n");
-    serialport_write_bytes(fd, payload);
+    serialport_write_bytes(fd, payload, size_payload);
     exit(EXIT_SUCCESS);
 }
