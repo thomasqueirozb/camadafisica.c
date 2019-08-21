@@ -108,7 +108,7 @@ int main(int argc, char* argv[]) {
     char buf[buf_max];
     int rc, n;
 
-    int baudrate = 9600;
+    int baudrate = 115200;
     char serialport[] = "/dev/ttyACM0";
 
     /* parse options */
@@ -269,42 +269,15 @@ int main(int argc, char* argv[]) {
     fw_ptr = fopen("recieved.bin", "wb+");
     if (!quiet) printf("Writing binary file\n");
     fwrite(payload, 1, size_payload, fw_ptr);
+
+    // // DEBUG
     // for (size_t ch = 0; ch < size_payload; ch++) {
-    //     printf("forzim\n");
-    //     printf("%c\n", payload[ch]);
-    //     // printf("%c", ch);
-    //     fprintf(fw_ptr, "%c", payload[ch]);
+    //     if (!quiet) printf("byte %ld = 0x%02x\n", ch, (uint8_t)payload[ch]);
+    //     if (ch == 500) return 200;
+    //     // printf("%c\n", payload[ch]);
+    //     // // printf("%c", ch);
+    //     // fprintf(fw_ptr, "%c", payload[ch]);
     // }
-
-    /*
-    int ch;
-    // Needs to be int unless EOF is the first 0xff not actual EOF
-    // on binary files only. Text files work fine if ch is char
-
-    uint8_t EOF_bytes[] = {0xab, 0xcd, 0xef};  // Will break if size<3 TODO:fix
-    uint8_t read_bytes[] = {0x00, 0x00, 0x00};
-
-    uint8_t payload[size_payload];
-    uint8_t EOFs = 0;
-
-    size_t counter = 0;
-    while ((ch = fgetc(fr_ptr)) != EOF ||
-           counter < size_payload) {  // size: char==1 byte==uint8_t
-        if (EOF_bytes[0] == read_bytes[0] && EOF_bytes[1] == read_bytes[1] &&
-            EOF_bytes[2] == read_bytes[2]) {
-            EOFs++;
-        }
-        read_bytes[0] = read_bytes[1];
-        read_bytes[1] = read_bytes[2];
-        read_bytes[2] = (uint8_t)ch;
-        // fprintf(fw_ptr, "%c", ch);
-        payload[counter] = ch;
-        counter++;
-    }
-    header[4] = EOFs;
-    serialport_write_bytes(fd, header);
-    serialport_write_bytes(fd, payload);
-    */
 
     exit(EXIT_SUCCESS);
 }

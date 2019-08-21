@@ -108,7 +108,7 @@ int main(int argc, char* argv[]) {
     char buf[buf_max];
     int rc, n;
 
-    int baudrate = 9600;
+    int baudrate = 115200;
     char serialport[] = "/dev/ttyACM0";
 
     /* parse options */
@@ -292,6 +292,9 @@ int main(int argc, char* argv[]) {
         read_bytes[1] = read_bytes[2];
         read_bytes[2] = (uint8_t)ch;
         // fprintf(fw_ptr, "%c", ch);
+        // // Debug: 0x0D (\r) interpreted as 0x0A (\n)
+        // if (!quiet) printf("byte %ld = 0x%02x\n", counter, (uint8_t)ch);
+        // if (counter == 500) return 200;
         payload[counter] = ch;
         counter++;
     }

@@ -75,13 +75,14 @@ int serialport_init(const char* serialport, int baud) {
     cfsetispeed(&toptions, brate);
     cfsetospeed(&toptions, brate);
 
+    // DEFAULT
     // 8N1
     toptions.c_cflag &= ~PARENB;
     toptions.c_cflag &= ~CSTOPB;
     toptions.c_cflag &= ~CSIZE;
     toptions.c_cflag |= CS8;
-    // no flow control
-    toptions.c_cflag &= ~CRTSCTS;
+    // // no flow control
+    // toptions.c_cflag &= ~CRTSCTS;
 
     // toptions.c_cflag &= ~HUPCL; // disable hang-up-on-close to avoid reset
 
@@ -94,7 +95,12 @@ int serialport_init(const char* serialport, int baud) {
     // see: http://unixwiz.net/techtips/termios-vmin-vtime.html
     toptions.c_cc[VMIN] = 0;
     toptions.c_cc[VTIME] = 0;
-    // toptions.c_cc[VTIME] = 20;
+
+    // \r interpreted as \n
+    // https://stackoverflow.com/questions/51430495/c-serial-read-does-not-find-carriage-return-r
+
+    // toptions.c_lflag &= ~ICANON;                        /* Canonical mode*/
+    // toptions.c_iflag &= ~(INPCK| IUCLC | IMAXBEL);
 
     tcsetattr(fd, TCSANOW, &toptions);
     if (tcsetattr(fd, TCSAFLUSH, &toptions) < 0) {
@@ -118,16 +124,17 @@ int serialport_write_bytes(int fd, const uint8_t* bytes, size_t n_bytes) {
     size_t bytes_written = 0;
 
     while (bytes_written < (size_t)n_bytes) {
-        n = write(fd, &bytes[bytes_written],
-                  1);            // write one byte at a time TODO optimize
+        n = write(fd, &bytes[bytes_written], n_bytes - bytes_written);
         // if (n == -1) return -1;  // couldn't read
         if (n == -1) continue;  // couldn't read
         if (n == 0) {
             // usleep(millis * 1000);  // wait 1 msec try again
             continue;
         }
-        printf("wrote total n: %ld bytes\n", bytes_written);
         bytes_written += n;
+        printf("wrote total of: %ld bytes n=%ld\n", bytes_written, n);
+        tcflush(fd, TCIOFLUSH);  // Flush port
+        usleep(10 * 1000);       // wait 1 msec try again. Maybe can remove
     }
     printf("Total bytes written: %ld\n", bytes_written);
     return 0;
@@ -171,17 +178,15 @@ int serialport_read_until(int fd, char* buf, char until, int buf_max,
 int serialport_read_bytes(int fd, uint8_t* buf, int n_bytes, int millis) {
     ssize_t n;
     size_t bytes_read = 0;
-    uint8_t temp_buf[1];
 
     while (bytes_read < (size_t)n_bytes) {
-        n = read(fd, temp_buf, 1);  // Read one byte at a time TODO optimize
-        if (n == -1) return -1;     // couldn't read
+        n = read(fd, &buf[bytes_read], n_bytes - bytes_read);
+        if (n == -1) return -1;  // couldn't read
         if (n == 0) {
-            usleep(millis * 1000);  // wait 1 msec try again
+            usleep(millis * 1000);  // wait 1 msec try again. Remove?
             continue;
         }
         printf("read total: %ld bytes\n", bytes_read);
-        buf[bytes_read] = temp_buf[0];
         bytes_read += n;
     }
     printf("Total bytes read: %ld\n", bytes_read);
