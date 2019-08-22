@@ -72,6 +72,9 @@ int serialport_init(const char* serialport, int baud) {
             brate = B115200;
             break;
     }
+    // brate = B230400;
+    brate = B4000000;
+    // brate = (speed_t) 5000000;
     cfsetispeed(&toptions, brate);
     cfsetospeed(&toptions, brate);
 
@@ -83,10 +86,19 @@ int serialport_init(const char* serialport, int baud) {
     toptions.c_cflag |= CS8;
 
     toptions.c_cflag |= CREAD | CLOCAL;  // turn on READ & ignore ctrl lines
+    toptions.c_cflag |= CRTSCTS;         // enable hardware flow control
     toptions.c_iflag &= ~(IXON | IXOFF | IXANY);  // turn off s/w flow ctrl
 
     toptions.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);  // make raw
     toptions.c_oflag &= ~OPOST;                           // make raw
+
+    // No delay for BSs, VTs, FFs, TABs, CR0, NL0
+    toptions.c_oflag |= TAB0;
+    toptions.c_oflag |= BS0;
+    toptions.c_oflag |= VT0;
+    toptions.c_oflag |= FF0;
+    toptions.c_oflag |= CR0;
+    toptions.c_oflag |= NL0;
 
     // see: http://unixwiz.net/techtips/termios-vmin-vtime.html
     toptions.c_cc[VMIN] = 0;
@@ -113,8 +125,8 @@ int serialport_write_bytes(int fd, const uint8_t* bytes, size_t n_bytes) {
 
     while (bytes_written < (size_t)n_bytes) {
         n = write(fd, &bytes[bytes_written], n_bytes - bytes_written);
-        // if (n == -1) return -1;  // couldn't read
-        if (n == -1) continue;  // couldn't read
+        // if (n == -1) return -1;  // couldn't write
+        if (n == -1) continue;  // couldn't write
         if (n == 0) {
             continue;
         }
@@ -123,7 +135,6 @@ int serialport_write_bytes(int fd, const uint8_t* bytes, size_t n_bytes) {
         printf("wrote total of: %ld bytes n=%ld\n", bytes_written, n);
 #endif
         tcflush(fd, TCIOFLUSH);  // Flush port
-        // usleep(10 * 1000);       // wait 1 msec try again. Maybe can remove
     }
     printf("Total bytes written: %ld\n", bytes_written);
     return 0;
@@ -156,11 +167,8 @@ int serialport_read_bytes(int fd, uint8_t* buf, int n_bytes) {
     }
 #ifdef SERIALPORTDEBUG
     printf("Total bytes read: %ld\n", bytes_read);
-#endif
-    return 0;
-#ifdef SERIALPORTDEBUG
-    printf("serialport_read_bytes n_bytes=%d, millis=%d read(n)=%d\n", n_bytes,
-           millis, n);
+    printf("serialport_read_bytes n_bytes=%d, read(n)=%d\n", n_bytes,
+           bytes_read);
 #endif
     return 0;
 }
