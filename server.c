@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
     char buf[buf_max];
     int rc, n;
 
-    int baudrate = 115200;
+    int baudrate = 4000000;
     char serialport[] = "/dev/ttyACM0";
 
     /* parse options */

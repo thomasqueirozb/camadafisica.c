@@ -17,6 +17,47 @@
 // uncomment this to debug reads
 //#define SERIALPORTDEBUG
 
+static speed_t rate_to_constant(int baudrate) {
+#define B(x) \
+    case x:  \
+        return B##x
+    switch (baudrate) {
+        B(50);
+        B(75);
+        B(110);
+        B(134);
+        B(150);
+        B(200);
+        B(300);
+        B(600);
+        B(1200);
+        B(1800);
+        B(2400);
+        B(4800);
+        B(9600);
+        B(19200);
+        B(38400);
+        B(57600);
+        B(115200);
+        B(230400);
+        B(460800);
+        B(500000);
+        B(576000);
+        B(921600);
+        B(1000000);
+        B(1152000);
+        B(1500000);
+        B(2000000);
+        B(2500000);
+        B(3000000);
+        B(3500000);
+        B(4000000);
+        default:
+            return 0;
+    }
+#undef B
+}
+
 // takes the string name of the serial port (e.g. "/dev/tty.usbserial","COM1")
 // and a baud rate (bps) and connects to that port at that speed and 8N1.
 // opens the port in fully raw mode so you can send binary data.
@@ -41,40 +82,8 @@ int serialport_init(const char* serialport, int baud) {
         perror("serialport_init: Couldn't get term attributes");
         return -1;
     }
-    speed_t brate = baud;  // let you override switch below if needed
-    switch (baud) {
-        case 4800:
-            brate = B4800;
-            break;
-        case 9600:
-            brate = B9600;
-            break;
-#ifdef B14400
-        case 14400:
-            brate = B14400;
-            break;
-#endif
-        case 19200:
-            brate = B19200;
-            break;
-#ifdef B28800
-        case 28800:
-            brate = B28800;
-            break;
-#endif
-        case 38400:
-            brate = B38400;
-            break;
-        case 57600:
-            brate = B57600;
-            break;
-        case 115200:
-            brate = B115200;
-            break;
-    }
-    // brate = B230400;
-    brate = B4000000;
-    // brate = (speed_t) 5000000;
+    speed_t brate = rate_to_constant(baud);
+
     cfsetispeed(&toptions, brate);
     cfsetospeed(&toptions, brate);
 
