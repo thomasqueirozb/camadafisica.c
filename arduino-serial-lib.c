@@ -81,13 +81,8 @@ int serialport_init(const char* serialport, int baud) {
     toptions.c_cflag &= ~CSTOPB;
     toptions.c_cflag &= ~CSIZE;
     toptions.c_cflag |= CS8;
-    // // no flow control
-    // toptions.c_cflag &= ~CRTSCTS;
-
-    // toptions.c_cflag &= ~HUPCL; // disable hang-up-on-close to avoid reset
 
     toptions.c_cflag |= CREAD | CLOCAL;  // turn on READ & ignore ctrl lines
-    toptions.c_iflag &= ~ICRNL;
     toptions.c_iflag &= ~(IXON | IXOFF | IXANY);  // turn off s/w flow ctrl
 
     toptions.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);  // make raw
@@ -98,10 +93,8 @@ int serialport_init(const char* serialport, int baud) {
     toptions.c_cc[VTIME] = 0;
 
     // \r interpreted as \n
-    // https://stackoverflow.com/questions/51430495/c-serial-read-does-not-find-carriage-return-r
-
-    // toptions.c_lflag &= ~ICANON;                        /* Canonical mode*/
-    // toptions.c_iflag &= ~(INPCK| IUCLC | IMAXBEL);
+    // https://stackoverflow.com/questions/57608755/character-r-transforms-to-n-when-transmitting-through-serial-port-in-c
+    toptions.c_iflag &= ~ICRNL;
 
     tcsetattr(fd, TCSANOW, &toptions);
     if (tcsetattr(fd, TCSAFLUSH, &toptions) < 0) {
@@ -154,7 +147,6 @@ int serialport_read_bytes(int fd, uint8_t* buf, int n_bytes) {
         n = read(fd, &buf[bytes_read], n_bytes - bytes_read);
         if (n == -1) return -1;  // couldn't read
         if (n == 0) {
-            // usleep(millis * 1000);  // wait 1 msec try again. Remove?
             continue;
         }
 #ifdef SERIALPORTDEBUG
@@ -170,9 +162,6 @@ int serialport_read_bytes(int fd, uint8_t* buf, int n_bytes) {
     printf("serialport_read_bytes n_bytes=%d, millis=%d read(n)=%d\n", n_bytes,
            millis, n);
 #endif
-    //     i += n;
-    // } while (i < n_bytes);
-
     return 0;
 }
 

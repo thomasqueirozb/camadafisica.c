@@ -172,10 +172,6 @@ int main(int argc, char* argv[]) {
                     if (!quiet) printf("closed port %s\n", serialport);
                 }
                 strcpy(serialport, optarg);
-                // fd = serialport_init(optarg, baudrate);
-                // if (fd == -1) error("couldn't open port");
-                // if (!quiet) printf("opened port %s\n", serialport);
-                // serialport_flush(fd);
                 break;
             case 'S':
             case 's':
@@ -272,10 +268,6 @@ int main(int argc, char* argv[]) {
         read_bytes[0] = read_bytes[1];
         read_bytes[1] = read_bytes[2];
         read_bytes[2] = (uint8_t)ch;
-        // fprintf(fw_ptr, "%c", ch);
-        // // Debug: 0x0D (\r) interpreted as 0x0A (\n)
-        // if (!quiet) printf("byte %ld = 0x%02x\n", counter, (uint8_t)ch);
-        // if (counter == 500) return 200;
         payload[counter] = ch;
         counter++;
     }

@@ -172,10 +172,6 @@ int main(int argc, char* argv[]) {
                     fd = -1;
                 }
                 strcpy(serialport, optarg);
-                // fd = serialport_init(optarg, baudrate);
-                // if (fd == -1) error("couldn't open port");
-                // if (!quiet) printf("opened port %s\n", serialport);
-                // serialport_flush(fd);
                 break;
             case 'S':
             case 's':
@@ -252,15 +248,5 @@ int main(int argc, char* argv[]) {
     fw_ptr = fopen("received.bin", "wb+");
     if (!quiet) printf("Writing binary file\n");
     fwrite(payload, 1, size_payload, fw_ptr);
-
-    // // DEBUG
-    // for (size_t ch = 0; ch < size_payload; ch++) {
-    //     if (!quiet) printf("byte %ld = 0x%02x\n", ch, (uint8_t)payload[ch]);
-    //     if (ch == 500) return 200;
-    //     // printf("%c\n", payload[ch]);
-    //     // // printf("%c", ch);
-    //     // fprintf(fw_ptr, "%c", payload[ch]);
-    // }
-
     exit(EXIT_SUCCESS);
 }
