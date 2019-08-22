@@ -177,14 +177,6 @@ int main(int argc, char* argv[]) {
                 // if (!quiet) printf("opened port %s\n", serialport);
                 // serialport_flush(fd);
                 break;
-
-            case 'n':
-                if (fd == -1) error("serial port not opened");
-                n = strtol(optarg, NULL, 10);  // convert string to number
-                printf("n: %d\n", (uint8_t)n);
-                rc = serialport_write_byte(fd, (uint8_t)n);
-                if (rc == -1) error("error writing");
-                break;
             case 'S':
             case 's':
                 if (fd == -1) error("serial port not opened");
@@ -202,18 +194,6 @@ int main(int argc, char* argv[]) {
                     rc = serialport_write(fd, buf);
                 }
                 if (rc == -1) error("error writing");
-                break;
-            case 'r':
-                if (fd == -1) error("serial port not opened");
-                memset(buf, 0, buf_max);  // Copy (buf_max)x 0's into buf
-
-                serialport_read_until(fd,        // device
-                                      buf,       // buffer
-                                      eolchar,   // end of line char
-                                      buf_max,   // maximum buffer length
-                                      timeout);  // timeout
-                if (!quiet) printf("read string:");
-                printf("%s\n", buf);
                 break;
             case 'F':
                 if (fd == -1) error("serial port not opened");

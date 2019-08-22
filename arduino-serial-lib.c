@@ -114,12 +114,6 @@ int serialport_init(const char* serialport, int baud) {
 
 int serialport_close(int fd) { return close(fd); }
 
-int serialport_write_byte(int fd, uint8_t b) {
-    int n = write(fd, &b, 1);
-    if (n != 1) return -1;
-    return 0;
-}
-
 int serialport_write_bytes(int fd, const uint8_t* bytes, size_t n_bytes) {
     ssize_t n;
     size_t bytes_written = 0;
@@ -149,31 +143,6 @@ int serialport_write(int fd, const char* str) {
         perror("serialport_write: couldn't write whole string\n");
         return -1;
     }
-    return 0;
-}
-
-int serialport_read_until(int fd, char* buf, char until, int buf_max,
-                          int timeout) {
-    char b[1];  // read expects an array, so we give it a 1-byte array
-    int i = 0;
-    do {
-        int n = read(fd, b, 1);  // read a char at a time
-        if (n == -1) return -1;  // couldn't read
-        if (n == 0) {
-            usleep(1 * 1000);  // wait 1 msec try again
-            timeout--;
-            if (timeout == 0) return -2;
-            continue;
-        }
-#ifdef SERIALPORTDEBUG
-        printf("serialport_read_until: i=%d, n=%d b='%c'\n", i, n,
-               b[0]);  // debug
-#endif
-        buf[i] = b[0];
-        i++;
-    } while (b[0] != until && i < buf_max && timeout > 0);
-
-    buf[i] = 0;  // null terminate the string
     return 0;
 }
 
