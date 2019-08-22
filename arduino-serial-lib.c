@@ -129,13 +129,14 @@ int serialport_write_bytes(int fd, const uint8_t* bytes, size_t n_bytes) {
         // if (n == -1) return -1;  // couldn't read
         if (n == -1) continue;  // couldn't read
         if (n == 0) {
-            // usleep(millis * 1000);  // wait 1 msec try again
             continue;
         }
         bytes_written += n;
+#ifdef SERIALPORTDEBUG
         printf("wrote total of: %ld bytes n=%ld\n", bytes_written, n);
+#endif
         tcflush(fd, TCIOFLUSH);  // Flush port
-        usleep(10 * 1000);       // wait 1 msec try again. Maybe can remove
+        // usleep(10 * 1000);       // wait 1 msec try again. Maybe can remove
     }
     printf("Total bytes written: %ld\n", bytes_written);
     return 0;
@@ -176,7 +177,7 @@ int serialport_read_until(int fd, char* buf, char until, int buf_max,
     return 0;
 }
 
-int serialport_read_bytes(int fd, uint8_t* buf, int n_bytes, int millis) {
+int serialport_read_bytes(int fd, uint8_t* buf, int n_bytes) {
     ssize_t n;
     size_t bytes_read = 0;
 
@@ -184,13 +185,17 @@ int serialport_read_bytes(int fd, uint8_t* buf, int n_bytes, int millis) {
         n = read(fd, &buf[bytes_read], n_bytes - bytes_read);
         if (n == -1) return -1;  // couldn't read
         if (n == 0) {
-            usleep(millis * 1000);  // wait 1 msec try again. Remove?
+            // usleep(millis * 1000);  // wait 1 msec try again. Remove?
             continue;
         }
+#ifdef SERIALPORTDEBUG
         printf("read total: %ld bytes\n", bytes_read);
+#endif
         bytes_read += n;
     }
+#ifdef SERIALPORTDEBUG
     printf("Total bytes read: %ld\n", bytes_read);
+#endif
     return 0;
 #ifdef SERIALPORTDEBUG
     printf("serialport_read_bytes n_bytes=%d, millis=%d read(n)=%d\n", n_bytes,

@@ -239,15 +239,15 @@ int main(int argc, char* argv[]) {
     if (!quiet) printf("Port %s flushed\n", serialport);
 
     /*************************************************\
-    |                  RECIEVE HEADER                 |
+    |                  RECEIVE HEADER                 |
     \*************************************************/
     uint8_t header[5] = {0};
     if (!quiet) printf("Reading header\n");
-    int header_recieved = serialport_read_bytes(fd, header, 5, 10);
-    if (!quiet) printf("Header recieve status %d\n", header_recieved);
+    int header_received = serialport_read_bytes(fd, header, 5);
+    if (!quiet) printf("Header receive status %d\n", header_received);
 
     /*************************************************\
-    |                 RECIEVE PAYLOAD                 |
+    |                 RECEIVE PAYLOAD                 |
     \*************************************************/
     size_t size_payload =
         header[3] | header[2] << 8 | header[1] << 16 | header[0] << 24;
@@ -262,11 +262,14 @@ int main(int argc, char* argv[]) {
     memset(payload, 0, size_payload);
 
     if (!quiet) printf("Reading payload\n");
-    int payload_recieved = serialport_read_bytes(fd, payload, size_payload, 30);
-    if (!quiet) printf("Payload recieve status %d\n", payload_recieved);
+    int payload_received = serialport_read_bytes(fd, payload, size_payload);
+    if (!quiet) printf("Payload receive status %d\n", payload_received);
+
+    if (!quiet) printf("Writing response\n");
+    serialport_write_bytes(fd, header, 4);
 
     FILE* fw_ptr;  // File write pointer
-    fw_ptr = fopen("recieved.bin", "wb+");
+    fw_ptr = fopen("received.bin", "wb+");
     if (!quiet) printf("Writing binary file\n");
     fwrite(payload, 1, size_payload, fw_ptr);
 

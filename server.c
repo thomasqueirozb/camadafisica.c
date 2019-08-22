@@ -49,6 +49,7 @@
 #include <stdio.h>  // Standard input/output definitions
 #include <stdlib.h>
 #include <string.h>  // String function definitions
+#include <sys/time.h>
 #include <unistd.h>  // for usleep()
 
 #include "arduino-serial-lib.h"
@@ -299,9 +300,34 @@ int main(int argc, char* argv[]) {
         counter++;
     }
     header[4] = EOFs;
+
+    if (!quiet) printf("Start time\n");
+    struct timeval stop, start;
+    gettimeofday(&start, NULL);
+
     if (!quiet) printf("Writing header\n");
     serialport_write_bytes(fd, header, 5);
     if (!quiet) printf("Writing payload\n");
     serialport_write_bytes(fd, payload, size_payload);
+
+    uint8_t response[4] = {0};
+    if (!quiet) printf("Reading response\n");
+    int response_received = serialport_read_bytes(fd, response, 4);
+
+    gettimeofday(&stop, NULL);
+
+    double ms = (double)(stop.tv_sec - start.tv_sec) * 1000 +
+                (double)(stop.tv_usec - start.tv_usec) / 1000;
+    if (!quiet) printf("Duration MS %'.3f\n", ms);
+    if (!quiet) printf("bytes/s %'.3f\n", 1000*(double)size_payload/ms);
+    if (!quiet) printf("Response receive status %d\n", response_received);
+    if (!quiet) printf("response[0] = 0x%hhx\n", response[0]);
+    if (!quiet) printf("response[1] = 0x%hhx\n", response[1]);
+    if (!quiet) printf("response[2] = 0x%hhx\n", response[2]);
+    if (!quiet) printf("response[3] = 0x%hhx\n", response[3]);
+
+    size_t size_response =
+        response[3] | response[2] << 8 | response[1] << 16 | response[0] << 24;
+    if (!quiet) printf("size_response = %ld\n", size_response);
     exit(EXIT_SUCCESS);
 }

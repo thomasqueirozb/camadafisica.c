@@ -33,7 +33,7 @@ arduino-serial-server: arduino-serial-lib.o
 
 
 clean:
-	rm -f recieved.bin
+	rm -f received.bin
 	rm -f server *.o *.a
 	rm -f client *.o *.a
 	rm -f $(OBJ) arduino-serial *.o *.a
