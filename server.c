@@ -238,7 +238,7 @@ int main(int argc, char* argv[]) {
 
     if (!quiet) printf("size_payload: %lu\n", size_payload);
     /*************************************************\
-    |         HEADER AND PAYLOAD (COUNT EOFs)         |
+    |         HEADER AND PAYLOAD (COUNT EOPs)         |
     \*************************************************/
 
     uint8_t header[5];
@@ -249,21 +249,21 @@ int main(int argc, char* argv[]) {
     header[3] = size_payload & 0xFF;
 
     int ch;
-    // Needs to be int unless EOF is the first 0xff not actual EOF
+    // Needs to be int unless EOP is the first 0xff not actual EOP
     // on binary files only. Text files work fine if ch is char
 
-    uint8_t EOF_bytes[] = {0xab, 0xcd, 0xef};  // Will break if size<3 TODO:fix
+    uint8_t EOP_bytes[] = {0xab, 0xcd, 0xef};  // Will break if size<3 TODO:fix
     uint8_t read_bytes[] = {0x00, 0x00, 0x00};
 
     uint8_t payload[size_payload];
-    uint8_t EOFs = 0;
+    uint8_t EOPs = 0;
 
     size_t counter = 0;
     while ((ch = fgetc(fr_ptr)) != EOF ||
            counter < size_payload) {  // size: char==1 byte==uint8_t
-        if (EOF_bytes[0] == read_bytes[0] && EOF_bytes[1] == read_bytes[1] &&
-            EOF_bytes[2] == read_bytes[2]) {
-            EOFs++;
+        if (EOP_bytes[0] == read_bytes[0] && EOP_bytes[1] == read_bytes[1] &&
+            EOP_bytes[2] == read_bytes[2]) {
+            EOPs++;
         }
         read_bytes[0] = read_bytes[1];
         read_bytes[1] = read_bytes[2];
@@ -271,7 +271,7 @@ int main(int argc, char* argv[]) {
         payload[counter] = ch;
         counter++;
     }
-    header[4] = EOFs;
+    header[4] = EOPs;
 
     if (!quiet) printf("Start time\n");
     struct timeval stop, start;
